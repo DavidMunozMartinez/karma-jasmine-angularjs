@@ -8,7 +8,7 @@ npm install karma-jasmine-angularjs --save-dev
 
 # Configuration
 > karma.conf.js
-```
+```ruby
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine-angularjs'],
@@ -29,7 +29,7 @@ The module our component belongs to, our component name, and its dependencies.
 ## I.E.
 
 > my-service.js
-```
+```ruby
 angular
   .module('myModule', [])
   .service('myService', myService);
@@ -42,7 +42,7 @@ myService () {
 ```
 
 > my-service.spec.js
-```
+```ruby
 describe('My service tests', function () {
   var testBed;
   var myService;

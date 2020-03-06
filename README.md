@@ -8,7 +8,7 @@ npm install karma-jasmine-angularjs --save-dev
 
 # Configuration
 > karma.conf.js
-```ruby
+```javascript
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine-angularjs'],

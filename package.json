@@ -1,0 +1,23 @@
+{
+  "name": "karma-jasmine-angularjs",
+  "version": "1.0.0",
+  "description": "Karma jasmine framework for easier angularjs unit tests development",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavidMunozMartinez/karma-jasmine-angularjs.git"
+  },
+  "author": "DavidMunozMartinez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DavidMunozMartinez/karma-jasmine-angularjs/issues"
+  },
+  "homepage": "https://github.com/DavidMunozMartinez/karma-jasmine-angularjs#readme",
+  "dependencies": {
+    "jasmine": "^3.5.0",
+    "karma": "^4.4.1"
+  }
+}

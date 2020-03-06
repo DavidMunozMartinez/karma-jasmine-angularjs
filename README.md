@@ -26,10 +26,10 @@ There is a few thing that we need to take into account to setup a proper environ
 
 The module our component belongs to, our component name, and its dependencies.
 
-## I.E.
+### I.E.
 
 > my-service.js
-```ruby
+```javascript
 angular
   .module('myModule', [])
   .service('myService', myService);
@@ -42,7 +42,7 @@ myService () {
 ```
 
 > my-service.spec.js
-```ruby
+```javascript
 describe('My service tests', function () {
   var testBed;
   var myService;
@@ -77,3 +77,39 @@ describe('My service tests', function () {
   });
 });
 ```
+### Handle dependencies
+
+Dependency handling is also very easy, for an angular component to be properly instantiated, all of its dependencies need to be previously injected, imagine our service looks like this:
+
+> my-service.js
+```javascript
+angular
+  .module('myModule', [])
+  .service('myService', myService);
+ 
+myService ($timeout, myOtherService) {
+  this.sum = function (a, b) {
+    return a + b;
+  };
+}
+```
+
+Here we have native angular service and our custom service as dependencies, for the test bed to handle this we need to add the following to our configuration object.
+
+```javascript
+testBed = TestBed.configure({
+  module: 'myModule',
+  service: 'myService',
+  dependencies: {
+    provide: ['$timeout']
+    mock: {
+      myOtherService: null
+    }
+  }
+});
+
+myService = testBed.service;
+```
+
+The provide object will assume that the dependency already exists in the enviorment and fetch it using angular's $inject service, the mock object will be used to create jasmine spy objects for us to mock away all behavior that needs to be mocked from our dependencies,
+both provided and mocked dependencies are accesible trough the ```javascript testBed.get('<dependencyName>') ``` method

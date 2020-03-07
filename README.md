@@ -281,7 +281,81 @@ With this we can always make sure that whenever "myService" needs to execute "my
 
 But, what if we want to mock behavior for a specific test? We can also assign specific behavior for a single test on the fly by calling ```var myOtherService = testBed.get('myOtherService'); ``` where "myOtherService" will contain an instance of the jasmine spy object created internally for us to control and alter as we need.
 
+> my-service.js
+```javascript
+angular
+  .module('myModule', [])
+  .service('myService', myService);
+ 
+myService ($timeout, myOtherService) {
+  this.sum = function (a, b) {
+    var result a + b;
+    var isValid = myOtherService.veryComplexLogic(result);
+    return isValid ? result : null;
+  };
+}
 
-## Controllers
+myOtherService($timeout, crazyDepdendency, anotherDependency) {
+  this.veryComplexLogic = function (value) {
+    if (typeof value != 'number') {
+      value = parseInt(value);
+    }
+    else {
+      ... More crazy logic that uses other dependencies and stuff
+    }
+  };
+}
+```
 
-Initializing a test environment for a controller 
+> my-service.spec.js
+```javascript
+describe('My service tests', function () {
+  var testBed;
+  var myService;
+  beforeEach(function () {
+    testBed = TestBed.configure({
+      module: 'myModule',
+      service: 'myService',
+      dependencies: {
+        mock: {
+          myOtherService: {
+            veryComplexLogic: function () { return true; }
+          }
+        }
+      }
+    });
+    
+    /*
+     * The test bed programagically handles mocking the module, injecting the service and returning an 
+     * instance of the given component.
+     */
+    myService = testBed.service;
+  });
+  
+  describe('initialize'. function () {
+    it('Should be defined', function () {
+      expect(myService).toBeDefined();
+    });
+  });
+  
+  describe('sum', function () {
+    it('Override dependencies behavior', function () {
+      var valueOne = 2;
+      var valueTwo = 2;
+      // Use the testBed get method to get the dependency
+      var myOtherService = testBed.get('myOtherService');
+      // Change myOtherService jasmine spy behavior
+      myOtherService.veryComplexLogic.and.callFake(function () {
+        return false;
+      });
+
+      var result = myService.sum(valueOne, valueTwo);
+      expect(result).toBeNull();
+      
+    });
+  });
+});
+```
+
+When we define our dependency we can decide what type of behavior it should have, but we can override that behavior at any given time for any test by directly modifying the jasmine spy object created.
+For more on jasmine spies see: https://jasmine.github.io/api/edge/Spy

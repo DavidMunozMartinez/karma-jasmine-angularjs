@@ -111,8 +111,8 @@ testBed = TestBed.configure({
 myService = testBed.service;
 ```
 
-The provide object will assume that the dependency already exists in the enviorment and try to fetch it using angular's $inject service, the mock object will be used to create jasmine spy objects for us to mock away all behavior that needs to be mocked from our dependencies,
-both provided and mocked dependencies are accesible trough the ```javascript testBed.get('<dependencyName>') ``` method.
+The provide object will assume that the dependency already exists in the environment and try to fetch it using angular's $inject service, the mock object will be used to create jasmine spy objects for us to mock away all behavior that needs to be mocked from our dependencies,
+both provided and mocked dependencies are accessible trough the ```testBed.get('<dependencyName>') ``` method.
 
 ### Mocking dependencies behavior
 
@@ -134,7 +134,7 @@ myService ($timeout, myOtherService) {
 
 myOtherService($timeout, crazyDepdendency, anotherDependency) {
   this.veryComplexLogic = function (value) {
-    if (instanceof value != 'numer') {
+    if (typeof value != 'number') {
       value = parseInt(value);
     }
     else {
@@ -144,7 +144,7 @@ myOtherService($timeout, crazyDepdendency, anotherDependency) {
 }
 ```
 
-Imagine we want to test "myService.sum" method, but notice that our "myService.sum" method uses another function from one of its dependencies, in reality we only care to know if "myService.sum" executes its logic correctly, not only that but, trying to inject "myOtherService" would require that we also make sure that all of its dependencies are injected in the enviorment, so make this simpler we can define specific behavior to our mocked dependencies to make sure we only test the code that we want.
+Imagine we want to test "myService.sum" method, but notice that our "myService.sum" method uses another function from one of its dependencies, in reality we only care to know if "myService.sum" executes its logic correctly, not only that but, trying to inject "myOtherService" would require that we also make sure that all of its dependencies are injected in the environment, so make this simpler we can define specific behavior to our mocked dependencies to make sure we only test the code that we want.
 
 ```javascript
 testBed = TestBed.configure({
@@ -167,5 +167,5 @@ With this we can always make sure that whenever "myService" needs to execute "my
 
 ### Mocking dependencies on the fly
 
-What if we want to mock behavior for a specific test, we can also assign specific behavior for a single test on the fly by calling ```javascript var myOtherService = testBed.get('myOtherService'); ``` where "myOtherService will contain an instance of the jasmine spy object created internally for us to control and alter as we need.
+What if we want to mock behavior for a specific test, we can also assign specific behavior for a single test on the fly by calling ```var myOtherService = testBed.get('myOtherService'); ``` where "myOtherService" will contain an instance of the jasmine spy object created internally for us to control and alter as we need.
 

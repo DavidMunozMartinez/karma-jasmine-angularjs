@@ -1,6 +1,6 @@
 {
   "name": "karma-jasmine-angularjs",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "Karma jasmine framework for easier angularjs unit tests development",
   "main": "src/index.js",
   "scripts": {

@@ -144,7 +144,7 @@ myOtherService($timeout, crazyDepdendency, anotherDependency) {
 }
 ```
 
-Imagine we want to test "myService.sum" method, but notice that our "myService.sum" method uses another function from one of its dependencies, in reality we only care to know if "myService.sum" executes its logic correctly, not only that but, trying to inject "myOtherService" would require that we also make sure that all of its dependencies are injected in the environment, so make this simpler we can define specific behavior to our mocked dependencies to make sure we only test the code that we want.
+Imagine we want to test "myService.sum" method, but notice that our "myService.sum" method uses another function from one of its dependencies, in reality we only care to know if "myService.sum" executes its logic correctly, so we shouldn't worry about what "myOtherService.veryComplexLogic" does, not only that but, trying to inject "myOtherService" would require that we also make sure that all of its dependencies are injected in the environment, so to make this simpler we can define specific behavior to our mocked dependencies to make sure we only test the code that we want.
 
 ```javascript
 testBed = TestBed.configure({

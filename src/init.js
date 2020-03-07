@@ -34,6 +34,26 @@
         };
     }
 
+    function createDirective(injector, directiveDefinition) {
+        var $rootScope = injector.get('$rootScope');
+        var $compile = injector.get('$compile');
+        var $scope = $rootScope.new();
+        if (directiveDefinition.$scope) {
+            var keys = Object.keys(directiveDefinition.$scope);
+            keys.forEach(function (key) {
+                $scope[key] = directiveDefinition.$scope[key];
+            });
+        }
+        if (!directiveDefinition.selector) {
+            throw 'Please provide a selector in directive.selector';
+        }
+        var directive = $compile(directiveDefinition.selector)($scope);
+        return {
+            directive: directive,
+            scope: $scope
+        };
+    }
+
 
     /**
      * Creates jasmine spies and provides them over a modifier function to
@@ -150,16 +170,36 @@
             }
         }
 
+        if (options.factory) {
+            try {
+                testUtils.factory = injector.get(options.factory);
+            }
+            catch (e) {
+                throw 'Failed to inject factory: ' + options.factory + '\n' + e;
+            }
+        }
+
         if (options.controller) {
             try {
                 var ctrl = createController(injector, options.controller);
                 testUtils.controller = ctrl.controller;
-                testUtils.provided.$scope = ctrl.scope;
+                testUtils.$scope = ctrl.scope;
             }
             catch (e) {
                 throw 'Failed to inject controller: ' + options.controller + '\n' + e;
             }
         }
+
+        // if (options.directive) {
+        //     try {
+        //         var result = createDirective(injector, options.directive);
+        //         testUtils.directive = result.directive;
+        //         testUtils.$scope = result.scope;
+        //     }
+        //     catch (e) {
+        //         throw 'Failed to compile directive: ' + options.directive.selector + '\n' + e;
+        //     }
+        // }
 
         return testUtils;
     }

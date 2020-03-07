@@ -26,7 +26,7 @@ There is a few thing that we need to take into account to setup a proper environ
 
 The module our component belongs to, our component name, and its dependencies.
 
-### I.E.
+### Service.
 
 > my-service.js
 ```javascript
@@ -54,7 +54,7 @@ describe('My service tests', function () {
     
     /*
      * The test bed programagically handles mocking the module, injecting the service and returning an 
-     * instance of the given component (controller/service).
+     * instance of the given component.
      */
     myService = testBed.service;
   });
@@ -77,9 +77,121 @@ describe('My service tests', function () {
   });
 });
 ```
-### Handle dependencies
 
-Dependency handling is also very easy, for an angular component to be properly instantiated, all of its dependencies need to be previously injected. Imagine our service looks like this:
+### Factory
+
+> my-factory.js
+```javascript
+angular
+  .module('myModule', [])
+  .factory('myFactory', myFactory);
+ 
+myFactory () {
+  var factory = {
+    sum: sum
+  };
+
+  function sum (a, b) {
+    return a + b;
+  }
+
+  return factory;
+}
+```
+
+> my-factory.spec.js
+```javascript
+describe('My factory tests', function () {
+  var testBed;
+  var myFactory;
+  beforeEach(function () {
+    testBed = TestBed.configure({
+      module: 'myModule',
+      factory: 'myFactory'
+    });
+    
+    /*
+     * The test bed programagically handles mocking the module, injecting the factory and returning an 
+     * instance of the given component.
+     */
+    myFactory = testBed.factory;
+  });
+  
+  describe('initialize'. function () {
+    it('Should be defined', function () {
+      expect(myFactory).toBeDefined();
+    });
+  });
+  
+  describe('sum', function () {
+    it('Should sum two values', function () {
+      var valueOne = 2;
+      var valueTwo = 2;
+      var result = myFactory.sum(valueOne, valueTwo);
+      
+      expect(result).toBe(4);
+      
+    });
+  });
+});
+```
+
+### Controller
+
+> my-controller.js
+```javascript
+angular
+  .module('myModule', [])
+  .controller('myController', myController);
+ 
+myController ($scope) {
+  $scope.initialValue = 0;
+}
+```
+
+> my-controller.spec.js
+```javascript
+describe('My controller tests', function () {
+  var testBed;
+  var myController;
+  var $scope;
+  beforeEach(function () {
+    testBed = TestBed.configure({
+      module: 'myModule',
+      controller: 'myController'
+    });
+    
+    /*
+     * The test bed programagically handles mocking the module, injecting the controller and returning an 
+     * instance of the given component.
+     */
+    myController = testBed.controller;
+    $scope = testBed.$scope;
+  });
+
+  describe('initialize'. function () {
+    it('Should be defined', function () {
+      expect(myController).toBeDefined();
+    });
+  });
+  
+  describe('initial value', function () {
+    it('Should initialize value at 0', function () {
+      expect($scope.initialValue).toBe(0);
+    });
+  });
+});
+```
+For controllers we make its scope accessible trough the testBed.$scope
+
+### Directive
+
+Directives are coming soon! Sorry for the inconvenience.
+
+
+## Handle dependencies
+
+Dependency handling is also very easy, for an AngularJS component to be properly instantiated, all of its dependencies need to be previously injected. Imagine our service looks like this:
 
 > my-service.js
 ```javascript
@@ -169,3 +281,7 @@ With this we can always make sure that whenever "myService" needs to execute "my
 
 But, what if we want to mock behavior for a specific test? We can also assign specific behavior for a single test on the fly by calling ```var myOtherService = testBed.get('myOtherService'); ``` where "myOtherService" will contain an instance of the jasmine spy object created internally for us to control and alter as we need.
 
+
+## Controllers
+
+Initializing a test environment for a controller 

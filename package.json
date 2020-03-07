@@ -10,6 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/DavidMunozMartinez/karma-jasmine-angularjs.git"
   },
+  "keywords": ["karma", "jasmine", "angularjs", "angular", "unit test", "setup", "javascript"],
   "author": "DavidMunozMartinez",
   "license": "ISC",
   "bugs": {

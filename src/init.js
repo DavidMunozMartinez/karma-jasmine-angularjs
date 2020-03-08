@@ -61,6 +61,11 @@
 				});
 			}
 		}
+		else {
+			inject(function ($injector) {
+				injector = $injector;
+			});
+		}
 
 		// Define the test utils object
 		var testUtils = {

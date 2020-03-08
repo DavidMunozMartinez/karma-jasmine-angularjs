@@ -79,7 +79,7 @@
 
 		// At this point all of our component dependencies should be injected and we should be ready to create
 		// an instance of it
-		var instance = instantiateComponent(options, type);
+		var instance = instantiateComponent(injector, options, type);
 		testUtils[type] = instance.component;
 		if (instance.scope) {
 			testUtils.$scope = instance.scope;
@@ -132,11 +132,10 @@
 	 * @param {any} options Options object from the configure method
 	 * @param {String} type type of component that we are trying to instantiate (service/factory/controller/directive/filter)
 	 */
-	function instantiateComponent(options, type) {
+	function instantiateComponent(injector, options, type) {
 		var component = null;
 		// Some components instantiate a new scope
 		var scope = null;
-		var injector = options.$injector;
 		var name = options[type];
 		switch (type) {
 			case 'service':

@@ -359,3 +359,7 @@ describe('My service tests', function () {
 
 When we define our dependency we can decide what type of behavior it should have, but we can override that behavior at any given time for any test by directly modifying the jasmine spy object created.
 For more on jasmine spies see: https://jasmine.github.io/api/edge/Spy
+
+This is not a framework or a strict guide on how to write your unit tests, this library is not invasive to the karma, jasmine or angularjs environment, this library is meant to be a plug-n-play helper for faster and more productive unit testing.
+
+Thank you for reading this far! :)

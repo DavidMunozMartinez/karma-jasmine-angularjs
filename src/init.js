@@ -7,84 +7,260 @@
 		configure: configure
 	};
 
-	// pollify for startsWith in IE
-	if (!String.prototype.startsWith) {
-		String.prototype.startsWith = function (searchString, position) {
-			position = position || 0;
-			return this.substr(position, searchString.length) === searchString;
-		};
-	}
-
 	/**
-	 * Creates a new controller instance of a given controller name
-	 * @param {injector} injector AngularJS injector service used to get the necessary services to instantiate a new controller
-	 * @param {String} ctrlName The name of the controller we want to instantiate
+	 *
+	 * @param {Object} options options object that will contain all the configuration configuration for the TestBed
+	 * @param {String} options.module name of the module that will be mocked for the testbed
+	 * @param {String} options.service name of the service that will be injected for the testBed
+	 * @param {String} options.controller name of the controller that will be injected for the testBed
+	 * @param {Object} options.dependencies object that will contain all data that will be used to create fake dependencies
+	 * or provide angular services to our testbed
+	 * @param {Array<String>} options.dependencies.provide Angular services to inject in our testbed
+	 * @param {Object} options.dependencies.mock Fake dependencies and methods to mock that will be provided in our testbed
 	 */
-	function createController(injector, ctrlName) {
-		var $rootScope = injector.get('$rootScope');
-		var $controller = injector.get('$controller');
-		var $scope = $rootScope.$new();
-		var controller = $controller(ctrlName, {
-			$scope: $scope
+	function configure(options) {
+		var injector = null;
+		var provider = null;
+		var type = null;
+		var dependencies = {
+			mocked: {},
+			provided: {}
+		};
+
+		var validation = validateOptions(options);
+		if (validation.errors.length > 0) {
+			throw validation.errors;
+		}
+		else {
+			type = validation.component;
+		}
+
+		// Defining our module
+		module(options.module, function (_$provide_) {
+			provider = _$provide_;
 		});
 
-		return {
-			controller: controller,
-			scope: $scope
-		};
-	}
-
-	function createDirective(injector, directiveDefinition) {
-		var $rootScope = injector.get('$rootScope');
-		var $compile = injector.get('$compile');
-		var $scope = $rootScope.new();
-		if (directiveDefinition.$scope) {
-			var keys = Object.keys(directiveDefinition.$scope);
-			keys.forEach(function (key) {
-				$scope[key] = directiveDefinition.$scope[key];
+		// Handle dependencies
+		if (options.dependencies) {
+			var mock = options.dependencies.mock;
+			var provide = options.dependencies.provide || [];
+			inject(function ($injector) {
+				injector = $injector;
+				// Provide actual angular services to our environment here
+				provide.forEach(function (dependency) {
+					dependencies.provided[dependency] = injector.get(dependency);
+				});
 			});
+			if (mock) {
+				buildJasmineSpies(options.dependencies.mock, function (name, spy) {
+					dependencies.mocked[name] = spy;
+					// All mocked dependencies are injected as a factory for simplicity
+					provider.factory(name, function () {
+						return spy;
+					});
+				});
+			}
 		}
-		if (!directiveDefinition.selector) {
-			throw 'Please provide a selector in directive.selector';
-		}
-		var directive = $compile(directiveDefinition.selector)($scope);
-		return {
-			directive: directive,
-			scope: $scope
+
+		// Define the test utils object
+		var testUtils = {
+			$provider: provider,
+			$injector: injector,
+			// TODO remove provided and mocked objects from here, they are accsesible trough the get method
+			provided: dependencies.provided,
+			mocked: dependencies.mocked,
+			get: injector.get
 		};
+
+		// At this point all of our component dependencies should be injected and we should be ready to create
+		// an instance of it
+		var instance = instantiateComponent(options, type);
+		testUtils[type] = instance.component;
+		if (instance.scope) {
+			testUtils.$scope = instance.scope;
+		}
+		return testUtils;
 	}
 
-	function invalidConfigObj(options) {
+	function validateOptions(options) {
 		var components = [];
-		var missingObligatories = [];
-		var obligatory = ['module'];
+		var missingProps = [];
+		var errors = [];
+		var mandatory = ['module'];
 
-		obligatory.forEach(function (prop) {
+		mandatory.forEach(function (prop) {
 			if (!options[prop]) {
-				missingObligatories.push(prop);
+				missingProps.push(prop);
 			}
 		});
 
-		if (missingObligatories > 0) {
+		if (missingProps > 0) {
 			var message = 'Missing';
-			missingObligatories.forEach(function (prop) {
+			missingProps.forEach(function (prop) {
 				message += ' ' + prop;
 			});
-			return message + ' in configuration object.'
+			errors.push(message);
 		}
 
 		if (options.service) { components.push('service'); }
 		if (options.factory) { components.push('factory'); }
 		if (options.controller) { components.push('controller'); }
 		if (options.directive) { components.push('directive'); }
+		if (options.filter) { components.push('filter'); }
 
-		if (components > 1) {
-			return 'Cannot provide multiple component types in the config object, you can only provide either "service", "factory", "controller" or "directive"';
+		if (components.length > 1) {
+			errors.push('Cannot provide multiple component types in the config object, you can only provide either "service", "factory", "controller", "directive" or "filter"');
 		}
 
-		return false;
+		return {
+			component: components[0],
+			errors: errors
+		};
 	}
 
+
+	function instantiateComponent(options, type) {
+		var component = null;
+		// Some components instantiate a new scope
+		var scope = null;
+		var injector = options.$injector;
+		var name = options[type];
+		switch (type) {
+			case 'service':
+			case 'factory':
+				component = instantiateServiceOrFactory(injector, {
+					name: name,
+					type: type
+				});
+				break;
+			case 'controller':
+				var instance = instantiateController(injector, name);
+				component = instance.controller;
+				scope = instance.scope;
+				break;
+			case 'directive':
+				var provider = options.$provider;
+				var instance = instantiateDirective(injector, {
+					parent: options.parentDirective || null,
+					name: name,
+					childDirectives: options.childDirectives || []
+				}, provider);
+				component = instance.directive;
+				scope = instance.scope;
+				break;
+			case 'filter':
+				component = instantiateFilter(injector, name)
+				break;
+		}
+
+		return {
+			component: component,
+			scope: scope
+		};
+	}
+
+	function instantiateServiceOrFactory(injector, config) {
+		var instance = null;
+		var name = config.name;
+		var type = config.type;
+		try {
+			instance = injector.get(name);
+		}
+		catch (e) {
+			throw 'Failed to instantiate ' + type + ': ' + name + '\n' + e;;
+		}
+		return instance;
+	}
+
+	/**
+	 * Creates a new controller instance of a given controller name
+	 * @param {injector} injector AngularJS injector service used to get the necessary services to instantiate a new controller
+	 * @param {String} name The name of the controller we want to instantiate
+	 */
+	function instantiateController(injector, name) {
+		try {
+			var $rootScope = injector.get('$rootScope');
+			var $controller = injector.get('$controller');
+			var $scope = $rootScope.$new();
+			var controller = $controller(name, {
+				$scope: $scope
+			});
+	
+			return {
+				controller: controller,
+				scope: $scope
+			};
+		}
+		catch (e) {
+			throw 'Failed to instantiate controller: ' + name + '\n' + e;
+		}
+	}
+
+	function instantiateDirective(injector, directiveDefinition, provider) {
+		try {
+			var $rootScope = injector.get('$rootScope');
+			var $compile = injector.get('$compile');
+			var $scope = $rootScope.new();
+			var parent = null;
+			// We can define a parent for our directive, in case our directive to test requires it in its definition object
+			if (directiveDefinition.parent) {
+				injectDummyDirective(provider, directiveDefinition.parent);
+				var parentName = directiveDefinition.parent;
+				var dashedParentName = camelCaseToDash(parentName);
+				parent = document.createElement(dashedParentName);
+			}
+
+			// Our directive under test could hace child directives, we need to handle those as well
+			if (directiveDefinition.childDirectives.length > 0) {
+				directiveDefinition.childDirectives.forEach(function (name) {
+					injectDummyDirective(name);
+				});
+	
+			}
+
+			// The directive could have initial values in the scope, we assign them here
+			if (directiveDefinition.$scope) {
+				var keys = Object.keys(directiveDefinition.$scope);
+				keys.forEach(function (key) {
+					$scope[key] = directiveDefinition.$scope[key];
+				});
+			}
+
+			var dashedName = camelCaseToDash(directiveDefinition.name);
+			var element = document.createElement(dashedName);
+			var directive = $compile(element)($scope);
+			if (parent) {
+				parent.append(element)
+			}
+
+			return {
+				directive: directive,
+				scope: $scope
+			};
+		}
+		catch (e) {
+			throw 'Failed to instantiate directive' + directiveDefinition.name + '\n' + e;
+		}
+	}
+
+	function camelCaseToDash (str) {
+		return str.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase()
+	}
+
+	function injectDummyDirective(provider, name) {
+		provider.directive(name, function () {
+			return {
+				template: '<div></div>'
+			};
+		});
+	}
+
+	function instantiateFilter(injector, name) {
+		var $filter = injector.get('$filter');
+		var component = $filter(name);
+
+		return component;
+	}
 
 	/**
 	 * Creates jasmine spies and provides them over a modifier function to
@@ -138,105 +314,11 @@
 		return jasmineSpyObj;
 	}
 
-	/**
-	 *
-	 * @param {Object} options options object that will contain all the configuration configuration for the TestBed
-	 * @param {String} options.module name of the module that will be mocked for the testbed
-	 * @param {String} options.service name of the service that will be injected for the testBed
-	 * @param {String} options.controller name of the controller that will be injected for the testBed
-	 * @param {Object} options.dependencies object that will contain all data that will be used to create fake dependencies
-	 * or provide angular services to our testbed
-	 * @param {Array<String>} options.dependencies.provide Angular services to inject in our testbed
-	 * @param {Object} options.dependencies.mock Fake dependencies and methods to mock that will be provided in our testbed
-	 */
-	function configure(options) {
-		var injector = null;
-		var provider = null;
-		var dependencies = {
-			mocked: {},
-			provided: {}
-		};
-
-		var invalid = invalidConfigObj(options);
-		if (invalid) {
-			throw invalid;
+		// pollify for startsWith in IE
+		if (!String.prototype.startsWith) {
+			String.prototype.startsWith = function (searchString, position) {
+				position = position || 0;
+				return this.substr(position, searchString.length) === searchString;
+			};
 		}
-
-		// Defining our module
-		module(options.module, function (_$provide_) {
-			provider = _$provide_;
-		});
-
-		// Handle dependencies
-		if (options.dependencies) {
-			var mock = options.dependencies.mock;
-			var provide = options.dependencies.provide || [];
-			inject(function ($injector) {
-				injector = $injector;
-				// Provide actual angular services to our environment here
-				provide.forEach(function (dependency) {
-					dependencies.provided[dependency] = injector.get(dependency);
-				});
-			});
-			if (mock) {
-				buildJasmineSpies(options.dependencies.mock, function (name, spy) {
-					dependencies.mocked[name] = spy;
-					provider.factory(name, function () {
-						return spy;
-					});
-				});
-			}
-		}
-
-		// Define the test utils object
-		var testUtils = {
-			$provider: provider,
-			$injector: injector,
-			provided: dependencies.provided,
-			mocked: dependencies.mocked,
-			get: injector.get
-		};
-
-		if (options.service) {
-			try {
-				testUtils.service = injector.get(options.service);
-			}
-			catch (e) {
-				throw 'Failed to inject service: ' + options.service + '\n' + e;
-			}
-		}
-
-		if (options.factory) {
-			try {
-				testUtils.factory = injector.get(options.factory);
-			}
-			catch (e) {
-				throw 'Failed to inject factory: ' + options.factory + '\n' + e;
-			}
-		}
-
-		if (options.controller) {
-			try {
-				var ctrl = createController(injector, options.controller);
-				testUtils.controller = ctrl.controller;
-				testUtils.$scope = ctrl.scope;
-			}
-			catch (e) {
-				throw 'Failed to inject controller: ' + options.controller + '\n' + e;
-			}
-		}
-
-		// if (options.directive) {
-		//     try {
-		//         var result = createDirective(injector, options.directive);
-		//         testUtils.directive = result.directive;
-		//         testUtils.$scope = result.scope;
-		//     }
-		//     catch (e) {
-		//         throw 'Failed to compile directive: ' + options.directive.selector + '\n' + e;
-		//     }
-		// }
-
-		return testUtils;
-	}
 })(window);

@@ -82,6 +82,10 @@
 		return testUtils;
 	}
 
+	/**
+	 * Validates that our options object contains all necessary and correct data for the library to properly initialize the required components
+	 * @param {any} options Options object from the configure method
+	 */
 	function validateOptions(options) {
 		var components = [];
 		var missingProps = [];
@@ -118,7 +122,11 @@
 		};
 	}
 
-
+	/**
+	 * Creates an instance of the component under testing, also returns a new scope for it of necessary.
+	 * @param {any} options Options object from the configure method
+	 * @param {String} type type of component that we are trying to instantiate (service/factory/controller/directive/filter)
+	 */
 	function instantiateComponent(options, type) {
 		var component = null;
 		// Some components instantiate a new scope
@@ -159,6 +167,11 @@
 		};
 	}
 
+	/**
+	 * Tries to instantiate and return the service or factory passed by it trough its config object
+	 * @param {any} injector AngularJS injector
+	 * @param {any} config Containes the type (service/factory) and name of the component trying to be injected.
+	 */
 	function instantiateServiceOrFactory(injector, config) {
 		var instance = null;
 		var name = config.name;
@@ -196,6 +209,12 @@
 		}
 	}
 
+	/**
+	 * Creates a new directive instance
+	 * @param {any} injector AngularJS injector
+	 * @param {any} directiveDefinition Directive data needed to properly instantiate the directive under test
+	 * @param {any} provider AngularJS provider to inject parent or child directives if required
+	 */
 	function instantiateDirective(injector, directiveDefinition, provider) {
 		try {
 			var $rootScope = injector.get('$rootScope');
@@ -243,10 +262,19 @@
 		}
 	}
 
+	/**
+	 * Transforms camel case strings into dashed strings (with hyphen)
+	 * @param {String} str String to transform
+	 */
 	function camelCaseToDash (str) {
 		return str.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase()
 	}
 
+	/**
+	 * Injects a dummy directive with the given name, this helps initialize the main directive that probably has children on a required parent
+	 * @param {any} provider AngularJS provider
+	 * @param {string} name Directive name to inject
+	 */
 	function injectDummyDirective(provider, name) {
 		provider.directive(name, function () {
 			return {
@@ -255,6 +283,11 @@
 		});
 	}
 
+	/**
+	 * Creates an instance of a filter
+	 * @param {any} injector AngularJS injector
+	 * @param {String} name Filter name to inject
+	 */
 	function instantiateFilter(injector, name) {
 		var $filter = injector.get('$filter');
 		var component = $filter(name);

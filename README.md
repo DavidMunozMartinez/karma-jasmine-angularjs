@@ -79,7 +79,6 @@ describe('My service tests', function () {
 ```
 
 ## Factory
-
 > my-factory.spec.js
 ```javascript
 testBed = TestBed.configure({
@@ -96,18 +95,6 @@ myFactory = testBed.factory;
 ```
 
 ## Controller
-
-> my-controller.js
-```javascript
-angular
-  .module('myModule', [])
-  .controller('myController', myController);
- 
-myController ($scope) {
-  $scope.initialValue = 0;
-}
-```
-
 > my-controller.spec.js
 ```javascript
 testBed = TestBed.configure({

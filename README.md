@@ -196,10 +196,9 @@ Notice how in the mock property we created an object with a null value. The valu
 
 Lets say we have two services:
 ```javascript
-angular
-  .module('myModule', [])
-  .service('myService', myService);
- 
+var myModule = angular.module('myModule', []);
+
+myModule.service('myService', myService);
 myService ($timeout, myOtherService) {
   this.sum = function (a, b) {
     var result a + b;
@@ -208,7 +207,8 @@ myService ($timeout, myOtherService) {
   };
 }
 
-myOtherService($timeout, crazyDepdendency, anotherDependency) {
+myModule.service('myOtherService', myOtherService);
+myOtherService($timeout, crazyDependency, anotherDependency) {
   this.veryComplexLogic = function (value) {
     if (typeof value != 'number') {
       value = parseInt(value);
@@ -244,32 +244,6 @@ With this we can always make sure that whenever "myService" needs to execute "my
 ### Mocking dependencies on the fly
 
 But, what if we want to mock behavior for a specific test? We can also assign specific behavior for a single test on the fly by calling ```var myOtherService = testBed.get('myOtherService'); ``` where "myOtherService" will contain an instance of the jasmine spy object created internally for us to control and alter as we need.
-
-> my-service.js
-```javascript
-angular
-  .module('myModule', [])
-  .service('myService', myService);
- 
-myService ($timeout, myOtherService) {
-  this.sum = function (a, b) {
-    var result a + b;
-    var isValid = myOtherService.veryComplexLogic(result);
-    return isValid ? result : null;
-  };
-}
-
-myOtherService($timeout, crazyDepdendency, anotherDependency) {
-  this.veryComplexLogic = function (value) {
-    if (typeof value != 'number') {
-      value = parseInt(value);
-    }
-    else {
-      ... More crazy logic that uses other dependencies and stuff
-    }
-  };
-}
-```
 
 > my-service.spec.js
 ```javascript

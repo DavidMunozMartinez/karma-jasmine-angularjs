@@ -79,7 +79,7 @@
 
 		// At this point all of our component dependencies should be injected and we should be ready to create
 		// an instance of it
-		var instance = instantiateComponent(injector, options, type);
+		var instance = instantiateComponent(testUtils, options, type);
 		testUtils[type] = instance.component;
 		if (instance.scope) {
 			testUtils.$scope = instance.scope;
@@ -132,11 +132,13 @@
 	 * @param {any} options Options object from the configure method
 	 * @param {String} type type of component that we are trying to instantiate (service/factory/controller/directive/filter)
 	 */
-	function instantiateComponent(injector, options, type) {
+	function instantiateComponent(utils, options, type) {
 		var component = null;
 		// Some components instantiate a new scope
 		var scope = null;
-		var name = options[type];
+        var name = options[type];
+        var injector = utils.$injector;
+        var provider = utils.$provider;
 		switch (type) {
 			case 'service':
 			case 'factory':
@@ -151,11 +153,12 @@
 				scope = instance.scope;
 				break;
 			case 'directive':
-				var provider = options.$provider;
 				var instance = instantiateDirective(injector, {
-					parent: options.parentDirective || null,
+					testModule: options.testModule,
 					name: name,
-					childDirectives: options.childDirectives || []
+					parent: options.parent || null,
+					children: options.children || [],
+					scope: options.scope || null
 				}, provider);
 				component = instance.directive;
 				scope = instance.scope;
@@ -216,45 +219,49 @@
 	/**
 	 * Creates a new directive instance
 	 * @param {any} injector AngularJS injector
-	 * @param {any} directiveDefinition Directive data needed to properly instantiate the directive under test
+	 * @param {any} definition Directive data needed to properly instantiate the directive under test
 	 * @param {any} provider AngularJS provider to inject parent or child directives if required
 	 */
-	function instantiateDirective(injector, directiveDefinition, provider) {
+	function instantiateDirective(injector, definition, provider) {
 		try {
 			var $rootScope = injector.get('$rootScope');
 			var $compile = injector.get('$compile');
-			var $scope = $rootScope.new();
+			var $scope = $rootScope.$new();
+			// var $httpBackend = injector.get('$httpBackend');
+			// $httpBackend.whenGET('*').passThrought();
 			var parent = null;
 			// We can define a parent for our directive, in case our directive to test requires it in its definition object
-			if (directiveDefinition.parent) {
-				injectDummyDirective(provider, directiveDefinition.parent);
-				var parentName = directiveDefinition.parent;
+			if (definition.parent) {
+				injectDummyDirective(provider, definition.parent);
+				var parentName = definition.parent;
 				var dashedParentName = camelCaseToDash(parentName);
 				parent = document.createElement(dashedParentName);
 			}
 
 			// Our directive under test could hace child directives, we need to handle those as well
-			if (directiveDefinition.childDirectives.length > 0) {
-				directiveDefinition.childDirectives.forEach(function (name) {
-					injectDummyDirective(name);
+			if (definition.children.length > 0) {
+				definition.children.forEach(function (name) {
+					injectDummyDirective(provider, name);
 				});
 	
 			}
 
-			// The directive could have initial values in the scope, we assign them here
-			if (directiveDefinition.$scope) {
-				var keys = Object.keys(directiveDefinition.$scope);
+			var dashedName = camelCaseToDash(definition.name);
+			var element = document.createElement(dashedName);
+			var $element = angular.element(element);
+			if (definition.scope) {
+				var keys = Object.keys(definition.scope);
 				keys.forEach(function (key) {
-					$scope[key] = directiveDefinition.$scope[key];
+					$scope[key] = definition.scope[key];
+					$element.attr(key, key);
 				});
 			}
-
-			var dashedName = camelCaseToDash(directiveDefinition.name);
-			var element = document.createElement(dashedName);
-			var directive = $compile(element)($scope);
+			var directive = $compile($element)($scope);
 			if (parent) {
-				parent.append(element)
+				var $parent = angular.element(parent);
+				$compile($parent)({});
 			}
+			$scope.$digest();
 
 			return {
 				directive: directive,
@@ -262,7 +269,7 @@
 			};
 		}
 		catch (e) {
-			throw 'Failed to instantiate directive' + directiveDefinition.name + '\n' + e;
+			throw 'Failed to instantiate directive ' + definition.name + '\n' + e;
 		}
 	}
 
@@ -271,7 +278,7 @@
 	 * @param {String} str String to transform
 	 */
 	function camelCaseToDash (str) {
-		return str.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase()
+		return str.replace(/([a-zA-Z0-9])(?=[A-Z])/g, '$1-').toLowerCase()
 	}
 
 	/**
@@ -280,7 +287,7 @@
 	 * @param {string} name Directive name to inject
 	 */
 	function injectDummyDirective(provider, name) {
-		provider.directive(name, function () {
+		provider.factory(name + 'Directive', function () {
 			return {
 				template: '<div></div>'
 			};

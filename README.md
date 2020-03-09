@@ -80,60 +80,19 @@ describe('My service tests', function () {
 
 ### Factory
 
-> my-factory.js
-```javascript
-angular
-  .module('myModule', [])
-  .factory('myFactory', myFactory);
- 
-myFactory () {
-  var factory = {
-    sum: sum
-  };
-
-  function sum (a, b) {
-    return a + b;
-  }
-
-  return factory;
-}
-```
-
 > my-factory.spec.js
 ```javascript
-describe('My factory tests', function () {
-  var testBed;
-  var myFactory;
-  beforeEach(function () {
-    testBed = TestBed.configure({
-      module: 'myModule',
-      factory: 'myFactory'
-    });
-    
-    /*
-     * The test bed programagically handles mocking the module, injecting the factory and returning an 
-     * instance of the given component.
-     */
-    myFactory = testBed.factory;
-  });
-  
-  describe('initialize'. function () {
-    it('Should be defined', function () {
-      expect(myFactory).toBeDefined();
-    });
-  });
-  
-  describe('sum', function () {
-    it('Should sum two values', function () {
-      var valueOne = 2;
-      var valueTwo = 2;
-      var result = myFactory.sum(valueOne, valueTwo);
-      
-      expect(result).toBe(4);
-      
-    });
-  });
+testBed = TestBed.configure({
+  module: 'myModule',
+  factory: 'myFactory'
 });
+
+/*
+  * The test bed programagically handles mocking the module, injecting the factory and returning an 
+  * instance of the given component.
+  */
+myFactory = testBed.factory;
+
 ```
 
 ### Controller
@@ -151,42 +110,60 @@ myController ($scope) {
 
 > my-controller.spec.js
 ```javascript
-describe('My controller tests', function () {
-  var testBed;
-  var myController;
-  var $scope;
-  beforeEach(function () {
-    testBed = TestBed.configure({
-      module: 'myModule',
-      controller: 'myController'
-    });
-    
-    /*
-     * The test bed programagically handles mocking the module, injecting the controller and returning an 
-     * instance of the given component.
-     */
-    myController = testBed.controller;
-    $scope = testBed.$scope;
-  });
-
-  describe('initialize'. function () {
-    it('Should be defined', function () {
-      expect(myController).toBeDefined();
-    });
-  });
-  
-  describe('initial value', function () {
-    it('Should initialize value at 0', function () {
-      expect($scope.initialValue).toBe(0);
-    });
-  });
+testBed = TestBed.configure({
+  module: 'myModule',
+  controller: 'myController'
 });
+
+/*
+  * The test bed programagically handles mocking the module, injecting the controller and returning an 
+  * instance of the given component.
+  */
+myController = testBed.controller;
+$scope = testBed.$scope;
 ```
 For controllers we make its scope accessible trough the testBed.$scope
 
 ### Directive
 
-Directives are coming soon! Sorry for the inconvenience.
+> my-directive.spec.js
+```javascript
+testBed = TestBed.configure({
+  module: 'myModule',
+  directive: 'myDirective'
+});
+
+myDirective = testBed.directive;
+$scope = testBed.$scope;
+```
+
+## Directive extras
+
+# scope
+If our directive has scope properties, we can also mock them by passing data trough the 'scope' property in the configuration object.
+# require
+If our directive uses the require property we can mock a parent by passing its name throughout the 'parent' property 
+# child directives
+If our directive contains other custom directives on in its template, to avoid injecting them we also mock them by passing their names into the 'children' property
+
+NOTE: the directive will be rendered as configured in its definition object, these are helper properties to mock all the necessary information that a directive might need to be able to instantiate itself
+
+
+> my-directive.spec.js
+```javascript
+testBed = TestBed.configure({
+  module: 'myModule',
+  directive: 'myDirective',
+  scope: { 
+    customData: {}
+   }
+  parent: 'myParentName',
+  children: ['myChildCustomDirective']
+});
+
+myDirective = testBed.directive;
+$scope = testBed.$scope;
+```
 
 
 ## Handle dependencies

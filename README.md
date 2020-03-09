@@ -26,7 +26,7 @@ There is a few thing that we need to take into account to setup a proper environ
 
 The module our component belongs to, our component name, and its dependencies.
 
-### Service.
+## Service.
 
 > my-service.js
 ```javascript
@@ -78,7 +78,7 @@ describe('My service tests', function () {
 });
 ```
 
-### Factory
+## Factory
 
 > my-factory.spec.js
 ```javascript
@@ -95,7 +95,7 @@ myFactory = testBed.factory;
 
 ```
 
-### Controller
+## Controller
 
 > my-controller.js
 ```javascript
@@ -124,7 +124,7 @@ $scope = testBed.$scope;
 ```
 For controllers we make its scope accessible trough the testBed.$scope
 
-### Directive
+## Directive
 
 > my-directive.spec.js
 ```javascript
@@ -137,13 +137,13 @@ myDirective = testBed.directive;
 $scope = testBed.$scope;
 ```
 
-## Directive extras
+### Directive extras
 
-# scope
+#### scope
 If our directive has scope properties, we can also mock them by passing data trough the 'scope' property in the configuration object.
-# require
+#### require
 If our directive uses the require property we can mock a parent by passing its name throughout the 'parent' property 
-# child directives
+#### child directives
 If our directive contains other custom directives on in its template, to avoid injecting them we also mock them by passing their names into the 'children' property
 
 NOTE: the directive will be rendered as configured in its definition object, these are helper properties to mock all the necessary information that a directive might need to be able to instantiate itself

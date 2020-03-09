@@ -143,7 +143,7 @@ testBed = TestBed.configure({
   directive: 'myDirective',
   scope: { 
     customData: {}
-   }
+  },
   parent: 'myParentName',
   children: ['myChildCustomDirective']
 });

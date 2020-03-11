@@ -1,6 +1,6 @@
 /* eslint-disable strict */
 var path = require('path');
-
+//Hello World
 var createPattern = function (pattern) {
     return {
         pattern: pattern,

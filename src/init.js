@@ -136,9 +136,9 @@
 		var component = null;
 		// Some components instantiate a new scope
 		var scope = null;
-        var name = options[type];
-        var injector = utils.$injector;
-        var provider = utils.$provider;
+		var name = options[type];
+		var injector = utils.$injector;
+		var provider = utils.$provider;
 		switch (type) {
 			case 'service':
 			case 'factory':
@@ -205,7 +205,7 @@
 			var controller = $controller(name, {
 				$scope: $scope
 			});
-	
+
 			return {
 				controller: controller,
 				scope: $scope
@@ -227,8 +227,6 @@
 			var $rootScope = injector.get('$rootScope');
 			var $compile = injector.get('$compile');
 			var $scope = $rootScope.$new();
-			// var $httpBackend = injector.get('$httpBackend');
-			// $httpBackend.whenGET('*').passThrought();
 			var parent = null;
 			// We can define a parent for our directive, in case our directive to test requires it in its definition object
 			if (definition.parent) {
@@ -243,7 +241,7 @@
 				definition.children.forEach(function (name) {
 					injectDummyDirective(provider, name);
 				});
-	
+
 			}
 
 			var dashedName = camelCaseToDash(definition.name);
@@ -261,6 +259,8 @@
 				var $parent = angular.element(parent);
 				$compile($parent)({});
 			}
+
+			// Interpolate any necessary template logic with digest
 			$scope.$digest();
 
 			return {
@@ -277,7 +277,7 @@
 	 * Transforms camel case strings into dashed strings (with hyphen)
 	 * @param {String} str String to transform
 	 */
-	function camelCaseToDash (str) {
+	function camelCaseToDash(str) {
 		return str.replace(/([a-zA-Z0-9])(?=[A-Z])/g, '$1-').toLowerCase()
 	}
 
@@ -358,11 +358,11 @@
 		return jasmineSpyObj;
 	}
 
-    // pollify for startsWith in IE
-    if (!String.prototype.startsWith) {
-        String.prototype.startsWith = function (searchString, position) {
-            position = position || 0;
-            return this.substr(position, searchString.length) === searchString;
-        };
-    }
+	// pollify for startsWith in IE
+	if (!String.prototype.startsWith) {
+		String.prototype.startsWith = function (searchString, position) {
+			position = position || 0;
+			return this.substr(position, searchString.length) === searchString;
+		};
+	}
 })(window);

@@ -152,6 +152,10 @@ myDirective = testBed.directive;
 $scope = testBed.$scope;
 ```
 
+### Directive templateUrl's
+
+If our directives use templateUrls we handle them with karma's preprocessor "karma-ng-html2js", this will load them in cache and angularjs will fetch them from there
+https://github.com/karma-runner/karma-ng-html2js-preprocessor#configuration
 
 ## Handle dependencies
 
@@ -214,7 +218,7 @@ myOtherService($timeout, crazyDependency, anotherDependency) {
       value = parseInt(value);
     }
     else {
-      ... More crazy logic with other dependencies and stuff
+      // ... More crazy logic with other dependencies and stuff
     }
   };
 }

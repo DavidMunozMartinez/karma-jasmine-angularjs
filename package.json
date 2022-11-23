@@ -28,6 +28,6 @@
   "dependencies": {
     "angular-mocks": "^1.7.9",
     "jasmine": "^3.5.0",
-    "karma": "^4.4.1"
+    "karma": "^6.4.1"
   }
 }
